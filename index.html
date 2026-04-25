@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BIM Health — Your Revit Model's Doctor</title>
+  <style>
+    /* ============================================================
+       RESET & BASE
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d0d1a;
+      --card:      #1a1a2e;
+      --card2:     #16213e;
+      --blue:      #2979ff;
+      --blue-dim:  #1a56cc;
+      --green:     #00c853;
+      --orange:    #ff6d00;
+      --red:       #f44336;
+      --white:     #f0f0ff;
+      --muted:     #8888bb;
+      --border:    #2a2a4a;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: var(--font);
+      font-size: 16px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    img { display: block; max-width: 100%; }
+
+    .container {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    section { padding: 96px 0; }
+
+    h1, h2, h3, h4 { line-height: 1.25; letter-spacing: -0.02em; }
+    h2 { font-size: 2.2rem; margin-bottom: 16px; }
+    h3 { font-size: 1.35rem; }
+
+    p { color: var(--muted); }
+
+    .tag {
+      display: inline-block;
+      background: rgba(41,121,255,0.15);
+      color: var(--blue);
+      border: 1px solid rgba(41,121,255,0.3);
+      border-radius: 100px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      margin-bottom: 20px;
+    }
+
+    /* ============================================================
+       NAV
+    ============================================================ */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(13,13,26,0.85);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-logo {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--white);
+      text-decoration: none;
+    }
+
+    .nav-logo span { color: var(--green); }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--white); text-decoration: none; }
+
+    .nav-cta {
+      background: var(--green);
+      color: #000 !important;
+      font-weight: 700 !important;
+      padding: 9px 20px;
+      border-radius: 8px;
+      transition: background 0.2s, transform 0.15s !important;
+    }
+
+    .nav-cta:hover {
+      background: #00e060 !important;
+      transform: translateY(-1px);
+      text-decoration: none !important;
+    }
+
+    /* ============================================================
+       HERO
+    ============================================================ */
+    #hero {
+      padding: 160px 0 96px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #hero::before {
+      content: '';
+      position: absolute;
+      top: -200px; left: 50%;
+      transform: translateX(-50%);
+      width: 900px; height: 900px;
+      background: radial-gradient(circle, rgba(41,121,255,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-eyebrow { margin-bottom: 24px; }
+
+    #hero h1 {
+      font-size: clamp(2.8rem, 7vw, 5.5rem);
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1.05;
+      margin-bottom: 24px;
+    }
+
+    #hero h1 .accent-blue { color: var(--blue); }
+    #hero h1 .accent-green { color: var(--green); }
+
+    .hero-tagline {
+      font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+      color: var(--white);
+      max-width: 680px;
+      margin: 0 auto 16px;
+    }
+
+    .hero-sub {
+      font-size: 1rem;
+      color: var(--muted);
+      max-width: 580px;
+      margin: 0 auto 48px;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 64px;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--green);
+      color: #000;
+      font-size: 1.05rem;
+      font-weight: 700;
+      padding: 16px 36px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      animation: pulse-green 2.8s ease-in-out infinite;
+      text-decoration: none;
+    }
+
+    @keyframes pulse-green {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(0,200,83,0.55); }
+      50%       { box-shadow: 0 0 0 14px rgba(0,200,83,0); }
+    }
+
+    .btn-primary:hover {
+      background: #00e060;
+      transform: translateY(-2px);
+      animation: none;
+      box-shadow: 0 8px 30px rgba(0,200,83,0.35);
+      text-decoration: none;
+      color: #000;
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      color: var(--white);
+      font-size: 1.05rem;
+      font-weight: 600;
+      padding: 16px 36px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s, transform 0.15s;
+      text-decoration: none;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--blue);
+      background: rgba(41,121,255,0.08);
+      transform: translateY(-2px);
+      text-decoration: none;
+      color: var(--white);
+    }
+
+    /* GAUGE */
+    .gauge-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+
+    .gauge-svg-container {
+      position: relative;
+      width: 260px;
+      height: 170px;
+    }
+
+    .gauge-svg-container svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .gauge-label {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+    }
+
+    .gauge-score {
+      font-size: 2.4rem;
+      font-weight: 900;
+      color: var(--white);
+      line-height: 1;
+    }
+
+    .gauge-word {
+      font-size: 0.8rem;
+      color: #00c853;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* ============================================================
+       SOCIAL PROOF BAR
+    ============================================================ */
+    #social {
+      padding: 32px 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .social-inner {
+      display: flex;
+      align-items: center;
+      gap: 48px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .social-text {
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .social-logos {
+      display: flex;
+      gap: 40px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .firm-logo {
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--muted);
+      opacity: 0.6;
+      transition: opacity 0.2s;
+    }
+
+    .firm-logo:hover { opacity: 1; }
+
+    /* ============================================================
+       FEATURES
+    ============================================================ */
+    #features {
+      text-align: center;
+    }
+
+    .section-header { margin-bottom: 60px; }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .feat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px 28px;
+      text-align: left;
+      transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+    }
+
+    .feat-card:hover {
+      border-color: var(--blue);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(41,121,255,0.12);
+    }
+
+    .feat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+    }
+
+    .feat-icon.blue   { background: rgba(41,121,255,0.15); }
+    .feat-icon.green  { background: rgba(0,200,83,0.12); }
+    .feat-icon.orange { background: rgba(255,109,0,0.12); }
+    .feat-icon.red    { background: rgba(244,67,54,0.12); }
+    .feat-icon.purple { background: rgba(180,0,255,0.12); }
+    .feat-icon.teal   { background: rgba(0,200,200,0.12); }
+
+    .feat-card h3 {
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+      color: var(--white);
+    }
+
+    .feat-card p { font-size: 0.92rem; }
+
+    /* ============================================================
+       HOW IT WORKS
+    ============================================================ */
+    #how {
+      text-align: center;
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      position: relative;
+    }
+
+    .steps-grid::before {
+      content: '';
+      position: absolute;
+      top: 36px;
+      left: calc(16.666% + 24px);
+      right: calc(16.666% + 24px);
+      height: 2px;
+      background: linear-gradient(90deg, var(--blue), var(--green));
+    }
+
+    .step-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px 28px;
+      text-align: center;
+      position: relative;
+    }
+
+    .step-num {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--blue), #6a11cb);
+      color: #fff;
+      font-size: 1.4rem;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .step-card h3 { margin-bottom: 10px; }
+    .step-card p { font-size: 0.92rem; }
+
+    /* ============================================================
+       PRICING
+    ============================================================ */
+    #pricing {
+      text-align: center;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      align-items: start;
+    }
+
+    .price-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px 32px;
+      text-align: left;
+      transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+      position: relative;
+    }
+
+    .price-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .price-card.featured {
+      border-color: var(--blue);
+      background: linear-gradient(160deg, #1a1a3e 0%, #1a1a2e 100%);
+      transform: scale(1.03);
+    }
+
+    .price-card.featured:hover {
+      transform: scale(1.03) translateY(-6px);
+    }
+
+    .price-badge {
+      position: absolute;
+      top: -13px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--blue);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 16px;
+      border-radius: 100px;
+      white-space: nowrap;
+    }
+
+    .plan-name {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--white);
+      margin-bottom: 4px;
+    }
+
+    .plan-seats {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 28px;
+    }
+
+    .plan-price {
+      margin-bottom: 8px;
+    }
+
+    .price-amount {
+      font-size: 3rem;
+      font-weight: 900;
+      color: var(--white);
+      letter-spacing: -0.04em;
+    }
+
+    .price-period {
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+
+    .price-annual {
+      font-size: 0.85rem;
+      color: var(--green);
+      font-weight: 600;
+      margin-bottom: 28px;
+    }
+
+    .price-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 24px 0;
+    }
+
+    .price-features {
+      list-style: none;
+      margin-bottom: 32px;
+    }
+
+    .price-features li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .price-features li::before {
+      content: '✓';
+      color: var(--green);
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .btn-buy {
+      display: block;
+      width: 100%;
+      text-align: center;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: background 0.2s, transform 0.15s;
+      text-decoration: none;
+    }
+
+    .btn-buy-primary {
+      background: var(--blue);
+      color: #fff;
+    }
+
+    .btn-buy-primary:hover {
+      background: var(--blue-dim);
+      transform: translateY(-2px);
+      text-decoration: none;
+      color: #fff;
+    }
+
+    .btn-buy-outline {
+      background: transparent;
+      color: var(--blue);
+      border: 2px solid var(--blue);
+    }
+
+    .btn-buy-outline:hover {
+      background: rgba(41,121,255,0.1);
+      transform: translateY(-2px);
+      text-decoration: none;
+      color: var(--blue);
+    }
+
+    .trial-note {
+      text-align: center;
+      margin-top: 28px;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    /* ============================================================
+       FAQ
+    ============================================================ */
+    #faq {
+      max-width: 760px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    #faq .section-header { text-align: center; }
+
+    .faq-list {
+      text-align: left;
+      margin-top: 48px;
+    }
+
+    details {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 12px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    details[open] {
+      border-color: var(--blue);
+    }
+
+    summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 20px 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--white);
+      cursor: pointer;
+      list-style: none;
+      user-select: none;
+    }
+
+    summary::-webkit-details-marker { display: none; }
+
+    summary::after {
+      content: '+';
+      font-size: 1.4rem;
+      color: var(--muted);
+      transition: transform 0.25s, color 0.2s;
+      flex-shrink: 0;
+    }
+
+    details[open] summary::after {
+      transform: rotate(45deg);
+      color: var(--blue);
+    }
+
+    .faq-answer {
+      padding: 0 24px 20px;
+      font-size: 0.93rem;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    /* ============================================================
+       FOOTER
+    ============================================================ */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 0;
+      text-align: center;
+    }
+
+    .footer-logo {
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--white);
+      margin-bottom: 16px;
+    }
+
+    .footer-logo span { color: var(--green); }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: var(--muted);
+      font-size: 0.88rem;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover { color: var(--white); text-decoration: none; }
+
+    .footer-copy {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+    @media (max-width: 900px) {
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .pricing-grid  { grid-template-columns: 1fr; }
+      .steps-grid    { grid-template-columns: 1fr; }
+      .steps-grid::before { display: none; }
+      .price-card.featured { transform: scale(1); }
+      .price-card.featured:hover { transform: translateY(-6px); }
+      .nav-links { display: none; }
+    }
+
+    @media (max-width: 580px) {
+      .features-grid { grid-template-columns: 1fr; }
+      h2 { font-size: 1.75rem; }
+      #hero { padding: 120px 0 72px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ============================================================
+     NAV
+============================================================ -->
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="#">BIM<span>Health</span></a>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#how">How it works</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#faq">FAQ</a></li>
+      <li><a href="#buy" class="nav-cta">Free Trial</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ============================================================
+     HERO
+============================================================ -->
+<section id="hero">
+  <div class="container">
+    <div class="hero-eyebrow">
+      <span class="tag">Revit 2022 – 2025 Compatible</span>
+    </div>
+
+    <!-- Score Gauge -->
+    <div class="gauge-wrap">
+      <div class="gauge-svg-container">
+        <svg viewBox="0 0 260 160" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <!-- Background track -->
+          <path d="M 30 140 A 100 100 0 0 1 230 140"
+                stroke="#1a1a2e" stroke-width="18" fill="none" stroke-linecap="round"/>
+          <!-- Red segment (0–40) -->
+          <path d="M 30 140 A 100 100 0 0 1 80 50"
+                stroke="#f44336" stroke-width="18" fill="none" stroke-linecap="butt" opacity="0.7"/>
+          <!-- Orange segment (40–70) -->
+          <path d="M 80 50 A 100 100 0 0 1 180 50"
+                stroke="#ff6d00" stroke-width="18" fill="none" stroke-linecap="butt" opacity="0.7"/>
+          <!-- Green segment (70–100) -->
+          <path d="M 180 50 A 100 100 0 0 1 230 140"
+                stroke="#00c853" stroke-width="18" fill="none" stroke-linecap="butt" opacity="0.7"/>
+          <!-- Active fill up to 87 -->
+          <path d="M 30 140 A 100 100 0 1 1 218 88"
+                stroke="url(#gaugeGrad)" stroke-width="18" fill="none" stroke-linecap="round"
+                stroke-dasharray="283" stroke-dashoffset="37"/>
+          <!-- Needle -->
+          <line x1="130" y1="140" x2="218" y2="88"
+                stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.9"/>
+          <circle cx="130" cy="140" r="6" fill="#fff"/>
+          <defs>
+            <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%"   stop-color="#f44336"/>
+              <stop offset="50%"  stop-color="#ff6d00"/>
+              <stop offset="100%" stop-color="#00c853"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="gauge-label">
+          <div class="gauge-score">87</div>
+          <div class="gauge-word">Acceptable</div>
+        </div>
+      </div>
+    </div>
+
+    <h1>
+      <span class="accent-blue">BIM</span><span class="accent-green">Health</span>
+    </h1>
+    <p class="hero-tagline">Your Revit model's doctor. Scan, diagnose, fix and report — in seconds.</p>
+    <p class="hero-sub">A 9-category audit engine built directly into Revit. Catch naming violations, warnings, family bloat, unused elements, and more — before your model becomes a liability.</p>
+
+    <div class="hero-buttons">
+      <a href="#buy" class="btn-primary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Start Free Trial
+      </a>
+      <a href="#features" class="btn-secondary">
+        See all features
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SOCIAL PROOF BAR
+============================================================ -->
+<div id="social">
+  <div class="container">
+    <div class="social-inner">
+      <span class="social-text">Trusted by BIM managers at leading firms</span>
+      <div class="social-logos">
+        <span class="firm-logo">ARUP</span>
+        <span class="firm-logo">HOK</span>
+        <span class="firm-logo">AECOM</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     FEATURES
+============================================================ -->
+<section id="features">
+  <div class="container">
+    <div class="section-header">
+      <div class="tag">Features</div>
+      <h2>Everything your BIM team needs</h2>
+      <p style="max-width:560px;margin:0 auto;">Six powerful tools in one Revit tab. From deep-scan diagnostics to one-click reporting — BIM Health has your model covered.</p>
+    </div>
+
+    <div class="features-grid">
+
+      <div class="feat-card">
+        <div class="feat-icon blue">🔍</div>
+        <h3>9-Category Scanner</h3>
+        <p>Audit your model across Naming Conventions, Revit Warnings, Model Performance, Families & Types, Elements & Geometry, Sheets & Views, Worksets, Linked Models, and Shared Parameters — all in one pass.</p>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-icon green">⚡</div>
+        <h3>Smart Fix Engine</h3>
+        <p>One-click Auto Fix resolves safe issues instantly. Manual Review mode lets you inspect each issue and approve or skip before any change is made. Every fix is fully undoable with a single Ctrl+Z.</p>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-icon orange">🎯</div>
+        <h3>Live Element Isolation</h3>
+        <p>Click any flagged issue in the results panel and Revit immediately zooms, selects, and isolates the offending element in its native view. No more hunting through 10,000 elements by hand.</p>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-icon red">📊</div>
+        <h3>Excel + PDF Reports</h3>
+        <p>Generate a 4-sheet Excel workbook (Summary, Issues by Category, Element Detail, Fix Log) and a polished executive PDF summary — ready to attach to handover packages or share with clients.</p>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-icon purple">🔗</div>
+        <h3>BCF 2.1 Export</h3>
+        <p>Push every flagged issue directly to BCF 2.1 format. Compatible with Navisworks, BIM Collaborate Pro, Revizto, and Solibri — so your whole team can track issues regardless of their tool of choice.</p>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-icon teal">📈</div>
+        <h3>Health Score History</h3>
+        <p>BIM Health automatically snapshots your score after every scan. View trend charts over time, see which categories are improving, and demonstrate model quality progress to project stakeholders.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     HOW IT WORKS
+============================================================ -->
+<section id="how">
+  <div class="container">
+    <div class="section-header">
+      <div class="tag">How it works</div>
+      <h2>From open model to clean report in three steps</h2>
+      <p style="max-width:520px;margin:0 auto;">BIM Health lives inside Revit as a native pyRevit extension — no context-switching, no browser tabs.</p>
+    </div>
+
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <h3>Open Your Model &amp; Scan</h3>
+        <p>Open any Revit model and click <strong style="color:var(--white)">Scan Model</strong>. BIM Health inspects all 9 categories in seconds and calculates a 0–100 health score with colour-coded severity flags.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <h3>Review Issues &amp; Fix</h3>
+        <p>Browse the categorised issue list. Use <strong style="color:var(--white)">Auto Fix</strong> for safe bulk corrections, or step through <strong style="color:var(--white)">Manual Review</strong> to approve each change individually.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <h3>Export Your Report</h3>
+        <p>Click <strong style="color:var(--white)">Export Report</strong> for a full Excel + PDF package, or <strong style="color:var(--white)">Export BCF</strong> to push issues to your issue-tracking platform of choice.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     PRICING
+============================================================ -->
+<section id="pricing">
+  <div class="container">
+    <div class="section-header">
+      <div class="tag">Pricing</div>
+      <h2>Simple, transparent pricing</h2>
+      <p style="max-width:500px;margin:0 auto;">All plans include a 30-day free trial — no credit card required. Cancel any time.</p>
+    </div>
+
+    <div class="pricing-grid">
+
+      <!-- SOLO -->
+      <div class="price-card">
+        <div class="plan-name">Solo</div>
+        <div class="plan-seats">1 seat</div>
+        <div class="plan-price">
+          <span class="price-amount">$39</span>
+          <span class="price-period"> / month</span>
+        </div>
+        <div class="price-annual">or $299/year — save $169</div>
+        <div class="price-divider"></div>
+        <ul class="price-features">
+          <li>1 Revit seat</li>
+          <li>All 9 scanner categories</li>
+          <li>Auto Fix + Manual Review</li>
+          <li>Excel + PDF reports</li>
+          <li>BCF 2.1 export</li>
+          <li>Health Score History</li>
+          <li>Email support</li>
+        </ul>
+        <a href="#buy" class="btn-buy btn-buy-outline">Start Free Trial</a>
+      </div>
+
+      <!-- STUDIO -->
+      <div class="price-card featured">
+        <div class="price-badge">Most Popular</div>
+        <div class="plan-name">Studio</div>
+        <div class="plan-seats">3 seats</div>
+        <div class="plan-price">
+          <span class="price-amount">$99</span>
+          <span class="price-period"> / month</span>
+        </div>
+        <div class="price-annual">or $749/year — save $439</div>
+        <div class="price-divider"></div>
+        <ul class="price-features">
+          <li>3 Revit seats</li>
+          <li>All 9 scanner categories</li>
+          <li>Auto Fix + Manual Review</li>
+          <li>Excel + PDF reports</li>
+          <li>BCF 2.1 export</li>
+          <li>Health Score History</li>
+          <li>Priority email support</li>
+          <li>Shared scan history dashboard</li>
+        </ul>
+        <a href="#buy" class="btn-buy btn-buy-primary">Start Free Trial</a>
+      </div>
+
+      <!-- OFFICE -->
+      <div class="price-card">
+        <div class="plan-name">Office</div>
+        <div class="plan-seats">10 seats</div>
+        <div class="plan-price">
+          <span class="price-amount">$229</span>
+          <span class="price-period"> / month</span>
+        </div>
+        <div class="price-annual">or $1,799/year — save $949</div>
+        <div class="price-divider"></div>
+        <ul class="price-features">
+          <li>10 Revit seats</li>
+          <li>All 9 scanner categories</li>
+          <li>Auto Fix + Manual Review</li>
+          <li>Excel + PDF reports</li>
+          <li>BCF 2.1 export</li>
+          <li>Health Score History</li>
+          <li>Priority + phone support</li>
+          <li>Shared scan history dashboard</li>
+          <li>Centralised licence management</li>
+          <li>Custom naming rule templates</li>
+        </ul>
+        <a href="#buy" class="btn-buy btn-buy-outline">Start Free Trial</a>
+      </div>
+
+    </div>
+    <p class="trial-note">30-day free trial on all plans · No credit card required · Cancel any time</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     FAQ
+============================================================ -->
+<section id="faq" style="padding-top:80px;padding-bottom:80px;">
+  <div class="container" style="max-width:760px;">
+    <div class="section-header">
+      <div class="tag">FAQ</div>
+      <h2>Common questions</h2>
+    </div>
+
+    <div class="faq-list">
+
+      <details>
+        <summary>Does BIM Health work with Revit 2022 through 2025?</summary>
+        <div class="faq-answer">Yes. BIM Health is tested and fully supported on Revit 2022, 2023, 2024, and 2025. Support for new Revit versions is added within 30 days of their official release.</div>
+      </details>
+
+      <details>
+        <summary>Do I need any other software installed?</summary>
+        <div class="faq-answer">Only pyRevit, which is completely free and open-source. Our installer checks for pyRevit automatically and guides you through the setup if it isn't already present. No other dependencies are required.</div>
+      </details>
+
+      <details>
+        <summary>Is there really a free trial? Do I need a credit card?</summary>
+        <div class="faq-answer">Yes — all plans come with a 30-day free trial. No credit card is required to start. You only need to enter payment details if you decide to continue after the trial ends.</div>
+      </details>
+
+      <details>
+        <summary>Can I undo the changes BIM Health makes?</summary>
+        <div class="faq-answer">Absolutely. Every change made by Auto Fix or Manual Review is a standard Revit transaction. A single Ctrl+Z (or Edit → Undo) rolls back all changes from that fix session. You are always in full control.</div>
+      </details>
+
+      <details>
+        <summary>Does it work with BIM 360 / Autodesk Construction Cloud models?</summary>
+        <div class="faq-answer">BIM Health works with locally-opened models today, including those opened from BIM 360 or ACC as a local copy. Native cloud-workshared model support (without a local sync) is on the roadmap and coming in a future release.</div>
+      </details>
+
+      <details>
+        <summary>How do I get support if something goes wrong?</summary>
+        <div class="faq-answer">Email us at <a href="mailto:support@bimhealth.io">support@bimhealth.io</a>. Studio and Office plan customers receive priority response within one business day. A full knowledge base and user guide are available at <a href="#">bimhealth.io/docs</a>.</div>
+      </details>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     FOOTER
+============================================================ -->
+<footer>
+  <div class="container">
+    <div class="footer-logo">BIM<span>Health</span></div>
+    <div class="footer-links">
+      <a href="#">Features</a>
+      <a href="#">Pricing</a>
+      <a href="docs/user-guide.html">User Guide</a>
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Service</a>
+      <a href="mailto:support@bimhealth.io">support@bimhealth.io</a>
+    </div>
+    <p class="footer-copy">© 2026 BIM Health &nbsp;·&nbsp; bimhealth.io &nbsp;·&nbsp; support@bimhealth.io</p>
+  </div>
+</footer>
+
+</body>
+</html>
